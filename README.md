@@ -1,5 +1,8 @@
 # Windows Storage Cleaner (Storage Manager)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/YDSilva00/windows-storage-cleaner)](https://github.com/YDSilva00/windows-storage-cleaner/releases/latest)
+
 A free, open-source **Windows desktop app (.NET 11 / WPF)** for the classic problem:
 
 > *"My C: drive is full, but I checked installed apps, temp files and Storage settings, and I still can't find what's using the space."*
@@ -25,6 +28,7 @@ Storage Manager scans your drive **including hidden and system files**, shows ex
 - [Adding a new cleanup location](#adding-a-new-cleanup-location)
 - [FAQ](#faq)
 - [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -358,3 +362,11 @@ No. Only the cache folders (`Cache`, `Code Cache`, `GPUCache`, Service Worker ca
 3. Commit and open a pull request
 
 Bug reports and ideas are welcome in **Issues**.
+
+---
+
+## License
+
+This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for the full text.
+
+You are free to use, copy, modify and distribute it, including commercially, as long as you keep the copyright and license notice. The software is provided "as is", without warranty of any kind.
