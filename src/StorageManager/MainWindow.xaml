@@ -5,7 +5,8 @@
         xmlns:m="clr-namespace:StorageManager.Models"
         Title="Storage Manager - find what is filling your drive"
         Width="1280" Height="820" MinWidth="980" MinHeight="600"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Icon="/Assets/app.ico">
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>

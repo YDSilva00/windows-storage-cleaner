@@ -9,3 +9,7 @@ publish/
 
 # local tool settings
 .claude/
+
+# installer output
+dist/
+artifacts/

@@ -50,7 +50,9 @@ public sealed partial class CleanupItemViewModel : ObservableObject
     [ObservableProperty] public partial string? Status { get; set; }
     [ObservableProperty] public partial bool IsExpanded { get; set; }
 
-    public string SizeText => IsBusy ? "measuring…" : Size switch
+    private bool _measured;
+
+    public string SizeText => IsBusy ? "measuring…" : !_measured ? "—" : Size switch
     {
         null when Definition.CustomSize is not null && Definition.NeedsAdmin && !SystemHelper.IsAdministrator => "needs admin",
         null when Definition.CustomSize is not null => "unknown",
@@ -67,7 +69,9 @@ public sealed partial class CleanupItemViewModel : ObservableObject
         try
         {
             var (size, locations) = await Task.Run(() => Measure(ct), ct);
+            _measured = true;
             Size = size;
+            OnPropertyChanged(nameof(SizeText));
             Locations.Clear();
             foreach (var l in locations.OrderByDescending(l => l.Size).Take(25)) Locations.Add(l);
         }

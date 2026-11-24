@@ -16,7 +16,9 @@ Storage Manager scans your drive **including hidden and system files**, shows ex
 - [Features](#features)
 - [Safety](#safety)
 - [Requirements](#requirements)
-- [Install and run](#install-and-run)
+- [Download and install (for users)](#download-and-install-for-users)
+- [Build from source (for developers)](#build-from-source-for-developers)
+- [Building the installer](#building-the-installer)
 - [How to use it](#how-to-use-it)
 - [Packages and technologies used](#packages-and-technologies-used)
 - [Project structure](#project-structure)
@@ -116,14 +118,29 @@ The app was designed so that you can't easily break Windows with it:
 | | |
 |---|---|
 | OS | Windows 10 (1809+) or Windows 11, x64 |
-| To **run** | [.NET 11 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/11.0) (not needed if you publish self-contained) |
+| To **run** | Nothing extra when you use the installer (it is self-contained) |
 | To **build** | [.NET 11 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/11.0) (11.0.100 or later) |
+| To build the **installer** | [Inno Setup 6](https://jrsoftware.org/isinfo.php) |
 | Optional | Visual Studio 2026 (18.12+) or VS Code with the C# Dev Kit, or JetBrains Rider |
 | Admin rights | Optional, but needed to measure restore points, `C:\Windows\Temp`, WER, the Installer cache and other protected folders. The app has a **Restart as administrator** button |
 
 ---
 
-## Install and run
+## Download and install (for users)
+
+1. Go to the [**Releases**](https://github.com/YDSilva00/windows-storage-cleaner/releases) page.
+2. Download **`StorageManager-Setup-<version>-x64.exe`**.
+3. Run it. The installer asks whether to install **for all users** (needs admin) or **only for me** (no admin needed).
+4. Start **Storage Manager** from the Start menu.
+
+- You **don't need to install .NET**. The installer includes everything.
+- Windows SmartScreen may warn about an unsigned app the first time. Click **More info → Run anyway**.
+- To uninstall, go to **Settings → Apps → Installed apps → Storage Manager → Uninstall**.
+- Silent install (for IT / scripts): `StorageManager-Setup-1.0.0-x64.exe /VERYSILENT /SUPPRESSMSGBOXES` (add `/CURRENTUSER` for a per-user install).
+
+---
+
+## Build from source (for developers)
 
 ### 1. Install the .NET 11 SDK
 Download it from <https://dotnet.microsoft.com/en-us/download/dotnet/11.0>, or use winget:
@@ -149,7 +166,7 @@ NuGet packages are restored automatically on the first build.
 
 To open it in Visual Studio, open **`StorageManager.slnx`** and press **F5**.
 
-### 4. Build a standalone .exe (to share with others)
+### 4. Portable single-file exe (optional)
 
 **Small single-file exe** (the other PC needs the .NET 11 Desktop Runtime):
 ```powershell
@@ -163,7 +180,44 @@ dotnet publish src/StorageManager -c Release -r win-x64 --self-contained true -p
 
 The app is at `publish\StorageManager.exe`. Copy it anywhere and double-click it.
 
-> Windows SmartScreen may warn about an unsigned app the first time. Click **More info → Run anyway**.
+---
+
+## Building the installer
+
+The installer is made with [**Inno Setup 6**](https://jrsoftware.org/isinfo.php).
+
+### 1. Install Inno Setup
+```powershell
+winget install JRSoftware.InnoSetup
+```
+
+### 2. Build
+```powershell
+powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
+```
+The script:
+1. Publishes the app **self-contained** for `win-x64`, with ReadyToRun for faster startup, into `artifacts\publish`.
+2. Compiles `installer\StorageManager.iss` with `ISCC.exe`.
+3. Writes the installer to **`dist\StorageManager-Setup-<version>-x64.exe`** (about 46 MB).
+
+The version comes from `<Version>` in `src/StorageManager/StorageManager.csproj`. You can override it:
+```powershell
+powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 -Version 1.1.0
+```
+
+### What the installer does
+- Installs to `C:\Program Files\Storage Manager` (all users) or `%LOCALAPPDATA%\Programs\Storage Manager` (only me).
+- Adds a Start menu shortcut, plus an optional desktop shortcut.
+- Registers in *Installed apps* with an uninstaller.
+- Closes a running copy before upgrading. Upgrades install over the old version (same `AppId`).
+- Offers to launch the app at the end.
+
+### Publishing a release
+1. Bump `<Version>` in the `.csproj`.
+2. Run the build script.
+3. On GitHub, go to **Releases → Draft a new release**, create a tag (e.g. `v1.1.0`) and attach `dist\StorageManager-Setup-1.1.0-x64.exe`.
+
+> Don't commit the `dist/` or `artifacts/` folders. They are in `.gitignore`.
 
 ---
 
@@ -203,6 +257,7 @@ The app is at `publish\StorageManager.exe`. Copy it anywhere and double-click it
 | Microsoft.VisualBasic (`FileSystem`) | part of .NET | Sending files and folders to the Recycle Bin |
 | Win32 APIs (via `LibraryImport`) | `shell32`, `kernel32` | `SHQueryRecycleBin`, `SHEmptyRecycleBin`, `GetCompressedFileSize` |
 | `System.IO.Enumeration.FileSystemEnumerable` | part of .NET | Low-allocation, high-speed directory enumeration for the scanner |
+| [Inno Setup](https://jrsoftware.org/isinfo.php) | 6.x | Builds the Windows installer (a build tool, not shipped inside the app) |
 
 No other third-party dependencies.
 
@@ -215,9 +270,13 @@ windows-storage-cleaner/
 ├── StorageManager.slnx                 # Solution
 ├── README.md
 ├── docs/screenshots/
+├── installer/
+│   ├── StorageManager.iss              # Inno Setup script
+│   └── build-installer.ps1             # Publish + compile installer -> dist\
 └── src/StorageManager/
     ├── StorageManager.csproj           # net11.0-windows, WPF, package references
     ├── app.manifest                    # asInvoker, PerMonitorV2 DPI, long paths
+    ├── Assets/app.ico                  # App + installer icon
     ├── App.xaml(.cs)                   # Fluent theme, shared styles, converters, error handler
     ├── MainWindow.xaml(.cs)            # UI: Overview, Disk Analyzer, Junk Cleaner, Hidden Space tabs
     ├── Models/
